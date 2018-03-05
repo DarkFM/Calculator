@@ -22,6 +22,7 @@ function Calculator() {
   this.opReady = false;
   this.opCanUse = true;
   this.clearScreen = false;
+  this.enterBtnHit = false;
 
 }
 
@@ -66,6 +67,7 @@ Calculator.prototype = {
 
         calc.opCanUse = true;
         calc.clearScreen = false;
+        calc.enterBtnHit = false;
         // save the operand history if it can
         if(calc.saveNum) {
           calc.historyIndex++;
@@ -176,6 +178,7 @@ Calculator.prototype = {
 
           var result = calc.CalculateResults(localOperatorArray[1] || localOperatorArray[0]);
           calc.Reset();
+          calc.enterBtnHit = true;
           calc.resultsArray[0] = result;
           calc.resultsArrayIndex++;
           calc.currentDiv.textContent = "";
@@ -250,10 +253,15 @@ Calculator.prototype = {
   },
 
   ClearScreen: function() {
+    if(this.centerBtnHit){
+      //this.enterBtnHit = false;
+      return;
+    }
     this.currentDiv.textContent = "";
     this.opCanUse = false;
     this.decimalCount = 0;
     this.clearScreen = true;
+
   },
 
   Reset: function name() {
@@ -276,6 +284,8 @@ Calculator.prototype = {
     this.historyDiv.textContent = "0";
     this.opCanUse = true;
     this.opReady = false;
+    this.clearScreen = false;
+    this.enterBtnHit = true;
   }
 
 
