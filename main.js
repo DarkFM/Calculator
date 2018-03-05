@@ -31,13 +31,11 @@ Calculator.prototype = {
    * @description replaces text in current Div with str
    */
   AddToCurrentView: function (str, decimalCount, allowMultiZeroes) {
-    console.log("decimalcount is: " + decimalCount + "allowMultipleZeroes is: " + allowMultiZeroes);
     
     if((str === '.' && decimalCount > 1) || !allowMultiZeroes) return; 
 
     this.currentDiv.textContent += str;
     this.UpdateNumbersHistory(this.currentDiv.textContent);
-    console.log(this.numbersHistory[this.numHistoryIndex]);
   },
 
   UpdateHistoryView: function () {
@@ -108,19 +106,14 @@ Calculator.prototype = {
     if(this.resultsArray[0] === undefined) {
       operandA = parseFloat(this.numbersHistory[this.numHistoryIndex-1]);
       operandB = parseFloat(this.numbersHistory[this.numHistoryIndex]);
-      console.log("inside first**********");
       
     }else { 
       operandA = parseFloat(this.resultsArray[this.resultsArrayIndex - 1]);
       operandB = parseFloat(this.numbersHistory[this.numHistoryIndex]);
     }
-    console.log(`operandA: ${operandA}, operandB: ${operandB}`);
-    console.log("Last number used: " + this.numbersHistory[this.numHistoryIndex]);
     
     var op = this._operator.operators[lastOperator];
-    console.log(`Operator used: ${op}`);
     var result = this._operator.Operate(operandA, operandB, this._operator[op]);
-    console.log(result + " The result");
     this.resultsArray[this.resultsArrayIndex++] = result;
     this.currentDiv.textContent = result;
     
@@ -137,7 +130,6 @@ Calculator.prototype = {
 
   UpdateOperatorHistoryIndex: function() {
     this.opHistoryIndex++;
-    console.log("the operator index is now " + this.opHistoryIndex);
   },
 
   OperatorListener: function () {
@@ -160,7 +152,6 @@ Calculator.prototype = {
           calc.opBtnPressed = true;
           localOperatorArray.push(text);
           if(localOperatorArray.length > 2) localOperatorArray.shift();
-          console.log("First OpElm: "+ localOperatorArray[0] + " Second OpElm: " + localOperatorArray[1]);
 
           calc.UpdateOperatorHistory(text);
           calc.UpdateHistoryView();
@@ -177,16 +168,14 @@ Calculator.prototype = {
         } else if (text === "sqrt") {
           calc.CalculateSqrt();
         } else if( text === "=") {
-          console.log("OpHistory: " + calc.opHistory.length);
-          console.log("numbersHistory: " + calc.numbersHistory.length);
           
+          // return if not enough operands to perform
           if(calc.opHistory.length >= calc.numbersHistory.length) return;
 
           var result = calc.CalculateResults(localOperatorArray[1] || localOperatorArray[0]);
           calc.Reset();
           calc.resultsArray[0] = result;
           calc.resultsArrayIndex++;
-          console.log("Equale result: " + result);
           calc.currentDiv.textContent = "";
           calc.AddToCurrentView(result.toString(), calc.decimalCount, true);
         }
@@ -202,13 +191,12 @@ Calculator.prototype = {
     var operand = Number(this.currentDiv.textContent);
 
     var op = this._operator.operators["sqrt"];
-    console.log(`Operator used: ${op}`);
     var result = this._operator.Operate(operand, null, this._operator[op]);
-    console.log(result + " The result");
 
     this.Reset();
 
-    this.resultsArray[this.resultsArrayIndex++] = result;
+    // this.resultsArray[this.resultsArrayIndex++] = result;
+    this.resultsArray[0] = result;
     this.currentDiv.textContent = result;
     this.currentDiv.textContent = "";
     this.AddToCurrentView(result.toString(), this.decimalCount, true);
@@ -229,12 +217,10 @@ Calculator.prototype = {
 
     if (isMin) {
       history[i] = Number(history[i].toString().slice(1));
-      console.log(history[i] + " true part");
 
       this.currentDiv.textContent = history[i];
     } else {
       history[i] = Number("-" + history[i]);
-      console.log(history[i] + " else part");
 
       this.currentDiv.textContent = history[i];
 
