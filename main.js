@@ -14,11 +14,13 @@ function Calculator() {
 
   this.result = 0;
   this._operator = new Operator(0,0);
-  this.lastAnswer = 0;
+  this.decimalCount = 0;
 
-  // check for when buttons have been clicked
+  // state checks
   this.saveNum = false;
   this.opBtnPressed = false;
+  this.opReady = false;
+  this.opCanUse = true;
 
 }
 
@@ -28,8 +30,11 @@ Calculator.prototype = {
    * @param  {} str
    * @description replaces text in current Div with str
    */
-  AddToCurrentView: function (str, decimalCount) {
-    if(str === '.' && decimalCount > 1) return; 
+  AddToCurrentView: function (str, decimalCount, allowMultiZeroes) {
+    console.log("decimalcount is: " + decimalCount + "allowMultipleZeroes is: " + allowMultiZeroes);
+    
+    if((str === '.' && decimalCount > 1) || !allowMultiZeroes) return; 
+
     this.currentDiv.textContent += str;
     this.UpdateNumbersHistory(this.currentDiv.textContent);
     console.log(this.numbersHistory[this.numHistoryIndex]);
@@ -55,27 +60,34 @@ Calculator.prototype = {
 
   NumbersListener: function () {
     function ObjRef(calc) {
-      var decimalCount = 0;
+      // var decimalCount = 0;
+      var allowMultiZeroes = false;
 
       return function (ev) {
 
+        calc.opCanUse = true;
         // save the operand history if it can
         if(calc.saveNum) {
           calc.historyIndex++;
           calc.saveNum = false;
           calc.currentDiv.textContent = "";
-          decimalCount = 0;
+          calc.decimalCount = 0;
           calc.UpdateNumberHistoryCounter();
           
         }
-        if(calc.currentDiv.textContent === "0")
-          calc.currentDiv.textContent = "";
         
         var text = ev.target.textContent;
-        if(text === '.')
-          decimalCount++;
+        if(text === '.') {
+          calc.decimalCount++;
+          allowMultiZeroes = true;
+        }
 
-        calc.AddToCurrentView(text, decimalCount);
+        if(text === "0" && !allowMultiZeroes)
+          calc.AddToCurrentView(text, calc.decimalCount, allowMultiZeroes);
+        else if(calc.currentDiv.textContent === "0" && text.match(/\d/g))
+          calc.currentDiv.textContent = "";
+        
+        calc.AddToCurrentView(text, calc.decimalCount, true);
 
         // if operator has been pressed then reset it
         if(calc.opBtnPressed) {
@@ -96,11 +108,15 @@ Calculator.prototype = {
     if(this.resultsArray[0] === undefined) {
       operandA = parseFloat(this.numbersHistory[this.numHistoryIndex-1]);
       operandB = parseFloat(this.numbersHistory[this.numHistoryIndex]);
-    } else { 
+      console.log("inside first**********");
+      
+    }else { 
       operandA = parseFloat(this.resultsArray[this.resultsArrayIndex - 1]);
       operandB = parseFloat(this.numbersHistory[this.numHistoryIndex]);
     }
     console.log(`operandA: ${operandA}, operandB: ${operandB}`);
+    console.log("Last number used: " + this.numbersHistory[this.numHistoryIndex]);
+    
     var op = this._operator.operators[lastOperator];
     console.log(`Operator used: ${op}`);
     var result = this._operator.Operate(operandA, operandB, this._operator[op]);
@@ -109,6 +125,7 @@ Calculator.prototype = {
     this.currentDiv.textContent = result;
     
     this.opReady = false;
+    return result;
   },
 
   UpdateOperatorHistory : function (str) {
@@ -126,12 +143,12 @@ Calculator.prototype = {
   OperatorListener: function () {
     function ObjRef(calc) {
       var localOperatorArray = [];
-      var localOpIndex = 0;
       
       return function (ev) {
+        if(!calc.opCanUse) return;
+
         var target = ev.target,
             text = target.textContent,
-            // current = calc.currentDiv,
             currentText = current.textContent;
 
         // check that basic operators are clicked
@@ -142,10 +159,8 @@ Calculator.prototype = {
         if(opMatch !== null && opMatch.length === 1) {
           calc.opBtnPressed = true;
           localOperatorArray.push(text);
-          // localOperatorArray[localOpIndex++ % 2] = text;
           if(localOperatorArray.length > 2) localOperatorArray.shift();
           console.log("First OpElm: "+ localOperatorArray[0] + " Second OpElm: " + localOperatorArray[1]);
-          
 
           calc.UpdateOperatorHistory(text);
           calc.UpdateHistoryView();
@@ -157,6 +172,23 @@ Calculator.prototype = {
             calc.CalculateResults(localOperatorArray[0]);
           }
           
+        } else if(text === "+/-") {
+          calc.FlipSign();
+        } else if (text === "sqrt") {
+          calc.CalculateSqrt();
+        } else if( text === "=") {
+          console.log("OpHistory: " + calc.opHistory.length);
+          console.log("numbersHistory: " + calc.numbersHistory.length);
+          
+          if(calc.opHistory.length >= calc.numbersHistory.length) return;
+
+          var result = calc.CalculateResults(localOperatorArray[1] || localOperatorArray[0]);
+          calc.Reset();
+          calc.resultsArray[0] = result;
+          calc.resultsArrayIndex++;
+          console.log("Equale result: " + result);
+          calc.currentDiv.textContent = "";
+          calc.AddToCurrentView(result.toString(), calc.decimalCount, true);
         }
       }
     }
@@ -164,8 +196,97 @@ Calculator.prototype = {
     this.operator.addEventListener("click", ObjRef(this));
 
     
-  }
+  },
+  CalculateSqrt: function () {
+    // if(this.resultsArray[this.resultsArrayIndex] == undefined){
+    var operand = Number(this.currentDiv.textContent);
 
+    var op = this._operator.operators["sqrt"];
+    console.log(`Operator used: ${op}`);
+    var result = this._operator.Operate(operand, null, this._operator[op]);
+    console.log(result + " The result");
+
+    this.Reset();
+
+    this.resultsArray[this.resultsArrayIndex++] = result;
+    this.currentDiv.textContent = result;
+    this.currentDiv.textContent = "";
+    this.AddToCurrentView(result.toString(), this.decimalCount, true);
+    // }
+  },
+
+  
+  /**
+   * @param  {} params
+   * @description Flips the sign of the operand on screen
+   */
+  FlipSign: function (params) {
+    if (this.opHistory.length == this.numbersHistory.length) return;
+
+    var history = this.numbersHistory;
+    var i = this.numHistoryIndex;
+    var isMin = (history[i].toString().slice(0, 1) === "-");
+
+    if (isMin) {
+      history[i] = Number(history[i].toString().slice(1));
+      console.log(history[i] + " true part");
+
+      this.currentDiv.textContent = history[i];
+    } else {
+      history[i] = Number("-" + history[i]);
+      console.log(history[i] + " else part");
+
+      this.currentDiv.textContent = history[i];
+
+    }
+  },
+
+  ControlsListener: function () {
+    
+    function ObjRef(calc) {
+      
+      return function (ev) {
+        
+        var text = ev.target.textContent;
+
+        if(text === "C") {
+          calc.Reset();
+        } else if(text === "CE") {
+          calc.ClearScreen();
+        }
+
+      }
+    }
+
+    this.controls.addEventListener("click", ObjRef(this));
+  },
+
+  ClearScreen: function() {
+    this.currentDiv.textContent = "";
+    this.opCanUse = false;
+    this.decimalCount = 0;
+  },
+
+  Reset: function name() {
+    this.numbersHistory = [0];
+    this.numHistoryIndex = 0;
+    this.opHistory = [];
+    this.opHistoryIndex = 0;
+  
+    this.resultsArray = [];
+    this.resultsArrayIndex = 0;
+  
+    this.result = 0;
+    this._operator = new Operator(0,0);
+    this.decimalCount = 0;
+  
+    this.saveNum = false;
+    this.opBtnPressed = false;
+
+    this.currentDiv.textContent = "0";
+    this.historyDiv.textContent = "0";
+    this.opCanUse = true;
+  }
 
 
 }
@@ -221,5 +342,6 @@ window.onload = function Main() {
   var calculator = new Calculator();
   calculator.NumbersListener();
   calculator.OperatorListener();
+  calculator.ControlsListener();
 
 }
