@@ -253,7 +253,7 @@ Calculator.prototype = {
   },
 
   ClearScreen: function() {
-    if(this.centerBtnHit){
+    if(this.enterBtnHit){
       //this.enterBtnHit = false;
       return;
     }
