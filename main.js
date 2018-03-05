@@ -21,6 +21,7 @@ function Calculator() {
   this.opBtnPressed = false;
   this.opReady = false;
   this.opCanUse = true;
+  this.clearScreen = false;
 
 }
 
@@ -64,6 +65,7 @@ Calculator.prototype = {
       return function (ev) {
 
         calc.opCanUse = true;
+        calc.clearScreen = false;
         // save the operand history if it can
         if(calc.saveNum) {
           calc.historyIndex++;
@@ -251,6 +253,7 @@ Calculator.prototype = {
     this.currentDiv.textContent = "";
     this.opCanUse = false;
     this.decimalCount = 0;
+    this.clearScreen = true;
   },
 
   Reset: function name() {
