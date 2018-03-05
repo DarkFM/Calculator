@@ -25,6 +25,7 @@ h1 {
   min-height: 70px;
   background: linear-gradient(180deg, #fefefe, #e2e2e2);
   border: 1px solid #333131;
+  border: 1px solid rgba(1,1,1,0.2);
 }
 
 .button:active {
