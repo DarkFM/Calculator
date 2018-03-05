@@ -272,6 +272,7 @@ Calculator.prototype = {
     this.currentDiv.textContent = "0";
     this.historyDiv.textContent = "0";
     this.opCanUse = true;
+    this.opReady = false;
   }
 
 
