@@ -67,7 +67,7 @@ Calculator.prototype = {
 
         calc.opCanUse = true;
         calc.clearScreen = false;
-        calc.enterBtnHit = false;
+
         // save the operand history if it can
         if(calc.saveNum) {
           calc.historyIndex++;
@@ -86,8 +86,15 @@ Calculator.prototype = {
 
         if(text === "0" && !allowMultiZeroes)
           calc.AddToCurrentView(text, calc.decimalCount, allowMultiZeroes);
-        else if(calc.currentDiv.textContent === "0" && text.match(/\d/g))
+        else if((calc.currentDiv.textContent === "0" && text.match(/\d/g))) {
           calc.currentDiv.textContent = "";
+        }
+        if(calc.enterBtnHit) {
+          calc.enterBtnHit = false;
+          calc.currentDiv.textContent = "";
+          calc.resultsArray = [];
+          calc.resultsArrayIndex = 0;
+        }
         
         calc.AddToCurrentView(text, calc.decimalCount, true);
 
